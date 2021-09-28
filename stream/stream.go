@@ -7,6 +7,9 @@ import (
 	"sort"
 )
 
+type T interface{} //原始类型
+type U interface{} //转换类型
+
 var Streams *streams
 
 func init() {
@@ -14,26 +17,26 @@ func init() {
 }
 
 type Stream interface {
-	Of(interface{}) Stream                                                                                                     //创造流
-	Map(func(interface{}) interface{}) Stream                                                                                  //转换
-	FlatMap(func(interface{}) []interface{}) Stream                                                                            //拍平
-	Filter(func(interface{}) bool) Stream                                                                                      //过滤
-	Sort(func(data []interface{}, i, j int) bool) Stream                                                                       //排序
-	Distinct(mapperKey func(interface{}) interface{}) Stream                                                                   //去重
-	ToSlice() []interface{}                                                                                                    //输出切片
-	CollectToMap(mapperKey func(interface{}) interface{}, collect func(interface{}) interface{}) map[interface{}][]interface{} //转换为map
-	Foreach(func(int, interface{}))                                                                                            //遍历
+	Of(T) Stream                                                   //创造流
+	Map(func(T) U) Stream                                          //转换
+	FlatMap(func(T) []U) Stream                                    //拍平
+	Filter(func(T) bool) Stream                                    //过滤
+	Sort(func(data []T, i, j int) bool) Stream                     //排序
+	Distinct(mapperKey func(T) U) Stream                           //去重
+	ToSlice() []T                                                  //输出切片
+	CollectToMap(mapperKey func(T) U, collect func(T) U) map[U][]U //转换为map
+	Foreach(func(int, T))                                          //遍历
 }
 
 //流接口实现
 type streams struct {
-	data []interface{} //切片数据
+	data []T //切片数据
 }
 
-func (s *streams) Of(arr interface{}) Stream {
+func (s *streams) Of(arr T) Stream {
 	data := slice.Interface2Slice(arr)
 	ns := &streams{
-		data: data,
+		data: convertT(data),
 	}
 	reflectTypeMap := make(map[reflect.Type]interface{}, 0)
 	//判断每个元素类型是否一致
@@ -52,9 +55,9 @@ func (s *streams) requireNonNil() {
 	}
 }
 
-func (s *streams) Map(convert func(interface{}) interface{}) Stream {
+func (s *streams) Map(convert func(T) U) Stream {
 	s.requireNonNil()
-	newData := make([]interface{}, 0)
+	newData := make([]T, 0)
 	for _, d := range s.data {
 		newData = append(newData, convert(d))
 	}
@@ -62,19 +65,19 @@ func (s *streams) Map(convert func(interface{}) interface{}) Stream {
 	return s
 }
 
-func (s *streams) FlatMap(flat func(interface{}) []interface{}) Stream {
+func (s *streams) FlatMap(flat func(t T) []U) Stream {
 	s.requireNonNil()
-	newData := make([]interface{}, 0)
+	newData := make([]U, 0)
 	for _, d := range s.data {
 		newData = append(newData, flat(d)...)
 	}
-	s.data = newData
+	s.data = convertU2T(newData)
 	return s
 }
 
-func (s *streams) Filter(filter func(interface{}) bool) Stream {
+func (s *streams) Filter(filter func(T) bool) Stream {
 	s.requireNonNil()
-	newData := make([]interface{}, 0)
+	newData := make([]T, 0)
 	for _, d := range s.data {
 		if filter(d) {
 			newData = append(newData, d)
@@ -84,7 +87,7 @@ func (s *streams) Filter(filter func(interface{}) bool) Stream {
 	return s
 }
 
-func (s *streams) Sort(compare func(data []interface{}, i, j int) bool) Stream {
+func (s *streams) Sort(compare func(data []T, i, j int) bool) Stream {
 	s.requireNonNil()
 	sort.Slice(s.data, func(i, j int) bool {
 		return compare(s.data, i, j)
@@ -92,16 +95,16 @@ func (s *streams) Sort(compare func(data []interface{}, i, j int) bool) Stream {
 	return s
 }
 
-func (s *streams) Distinct(mapperKey func(interface{}) interface{}) Stream {
+func (s *streams) Distinct(mapperKey func(T) U) Stream {
 	s.requireNonNil()
-	dataMap := make(map[interface{}]interface{}, 0)
+	dataMap := make(map[U]T, 0)
 	for _, d := range s.data {
 		key := mapperKey(d)
 		if _, ok := dataMap[key]; !ok {
 			dataMap[key] = d
 		}
 	}
-	newData := make([]interface{}, 0)
+	newData := make([]T, 0)
 	for _, v := range dataMap {
 		newData = append(newData, v)
 	}
@@ -109,25 +112,49 @@ func (s *streams) Distinct(mapperKey func(interface{}) interface{}) Stream {
 	return s
 }
 
-func (s *streams) ToSlice() []interface{} {
+func (s *streams) ToSlice() []T {
 	return s.data
 }
 
-func (s *streams) CollectToMap(mapperKey func(interface{}) interface{}, collect func(interface{}) interface{}) map[interface{}][]interface{} {
+func (s *streams) CollectToMap(mapperKey func(T) U, collect func(T) U) map[U][]U {
 	s.requireNonNil()
-	dataMap := make(map[interface{}][]interface{}, 0)
+	dataMap := make(map[U][]U, 0)
 	for _, d := range s.data {
 		key := mapperKey(d)
 		if _, ok := dataMap[key]; !ok {
-			dataMap[key] = make([]interface{}, 0)
+			dataMap[key] = make([]U, 0)
 		}
 		dataMap[key] = append(dataMap[key], collect(d))
 	}
 	return dataMap
 }
-func (s *streams) Foreach(foreach func(int, interface{})) {
+func (s *streams) Foreach(foreach func(int, T)) {
 	s.requireNonNil()
 	for i, d := range s.data {
 		foreach(i, d)
 	}
+}
+
+func convertT(in []interface{}) []T {
+	ts := make([]T, 0)
+	for _, i := range in {
+		ts = append(ts, T(i))
+	}
+	return ts
+}
+
+func convertT2U(ts []T) []U {
+	us := make([]U, 0)
+	for _, t := range ts {
+		us = append(us, U(t))
+	}
+	return us
+}
+
+func convertU2T(us []U) []T {
+	ts := make([]T, 0)
+	for _, u := range us {
+		ts = append(ts, T(u))
+	}
+	return ts
 }
