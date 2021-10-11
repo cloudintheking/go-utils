@@ -1,26 +1,6 @@
-package slice
+package slices
 
-import "reflect"
 
-/**
- * @Description:  接口转切片
- * @param slice
- * @return []interface{}
- */
-func Interface2Slice(slice interface{}) []interface{} {
-	s := reflect.ValueOf(slice)
-	if s.Kind() != reflect.Slice {
-		panic("InterfaceSlice() given a non-slice type")
-	}
-
-	ret := make([]interface{}, s.Len())
-
-	for i := 0; i < s.Len(); i++ {
-		ret[i] = s.Index(i).Interface()
-	}
-
-	return ret
-}
 
 /**
  *  @Description:  int64切片去重
@@ -129,19 +109,4 @@ func SliceMuchFloatAdd(sli ...[]float64) []float64 {
 		origin = SliceTwoFloatAdd(origin, s)
 	}
 	return origin
-}
-
-/**
- *  @Description: 元素包含
- *  @param arr
- *  @param a
- *  @return bool
- */
-func IntSliceContains(arr []int64, o int64) bool {
-	for _, a := range arr {
-		if a == o {
-			return true
-		}
-	}
-	return false
 }

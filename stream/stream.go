@@ -2,7 +2,7 @@ package stream
 
 import (
 	"errors"
-	"github.com/cloudintheking/go-utils/slice"
+	"github.com/cloudintheking/go-utils/common"
 	"reflect"
 	"sort"
 )
@@ -19,7 +19,10 @@ type streams struct {
 }
 
 func (s *streams) Of(arr T) Stream {
-	data := slice.Interface2Slice(arr)
+	data, err := common.Interface2Slice(arr)
+	if err != nil {
+		panic(err)
+	}
 	ns := &streams{
 		data: convertT(data),
 	}
@@ -97,7 +100,7 @@ func (s *streams) Distinct(mapperKey func(T) U) Stream {
 	return s
 }
 
-func (s *streams) ToSlice() []T {
+func (s *streams) ToSlice() interface{} {
 	return s.data
 }
 
