@@ -70,14 +70,14 @@ func FillBlankDate(data interface{}, fillType int) (interface{}, error) {
 func FillYearBlankDate(data []DateFillInterface, elementType reflect.Type) (interface{}, error) {
 	//将data转换为[]int切片yearSlice(去重并升序排序)
 	yearSlice := stream.Streams.Of(data).
-		Map(func(t stream.T) stream.U {
+		Map(func(t interface{}) interface{} {
 			date := t.(DateFillInterface)
 			return date.GetFillDate().Year()
 		}).
-		Distinct(func(t stream.T) stream.U {
+		Distinct(func(t interface{}) interface{} {
 			return t.(int)
 		}).
-		Sort(func(data []stream.T, i, j int) bool {
+		Sort(func(data []interface{}, i, j int) bool {
 			iD := data[i].(int)
 			jD := data[j].(int)
 			return iD < jD
