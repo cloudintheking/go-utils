@@ -42,6 +42,13 @@ func FillBlankDate(data interface{}, fillType int) (interface{}, error) {
 		newData = append(newData, d.(DateFillInterface))
 	}
 	elementType := reflect.TypeOf(sData[0]) //元素类型
+	for {
+		if elementType.Kind() == reflect.Ptr {
+			elementType = elementType.Elem()
+		} else {
+			break
+		}
+	}
 	switch fillType {
 	case YEAR:
 		return FillYearBlankDate(newData, elementType)
@@ -72,15 +79,15 @@ func FillYearBlankDate(data []DateFillInterface, elementType reflect.Type) (inte
 		}).
 		Sort(func(data []stream.T, i, j int) bool {
 			iD := data[i].(int)
-			jD := data[i].(int)
+			jD := data[j].(int)
 			return iD < jD
 		}).
-		ToSlice().([]int)
+		ToSlice().([]stream.T)
 
 	length := len(yearSlice)
 	//拿到最大值maxYear,遍历yearSlice: year < maxYear
-	minYear := yearSlice[0]
-	maxYear := yearSlice[length-1]
+	minYear := yearSlice[0].(int)
+	maxYear := yearSlice[length-1].(int)
 
 	fillYear := make([]DateFillInterface, 0)
 	for i := minYear; i <= maxYear; i++ {
@@ -96,7 +103,7 @@ func FillYearBlankDate(data []DateFillInterface, elementType reflect.Type) (inte
 		if ok {
 			fillYear = append(fillYear, existsYear.(DateFillInterface))
 		} else {
-			fillYear = append(fillYear, emptyYear.Elem().Interface().(DateFillInterface))
+			fillYear = append(fillYear, emptyYear.Interface().(DateFillInterface))
 		}
 	}
 	return fillYear, nil

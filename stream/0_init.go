@@ -4,21 +4,21 @@ type T interface{} //原始类型
 type U interface{} //转换类型
 //同步流
 type Stream interface {
-	Of(T) Stream                                                   //创造流
-	Map(func(T) U) Stream                                          //转换
-	FlatMap(func(T) []U) Stream                                    //拍平
-	Filter(func(T) bool) Stream                                    //过滤
-	Sort(func(data []T, i, j int) bool) Stream                     //排序
-	Distinct(mapperKey func(T) U) Stream                           //去重
+	Of(interface{}) Stream                                                   //创造流
+	Map(func(interface{}) interface{}) Stream                                          //转换
+	FlatMap(func(interface{}) []interface{}) Stream                                    //拍平
+	Filter(func(interface{}) bool) Stream                                    //过滤
+	Sort(func(data []interface{}, i, j int) bool) Stream                     //排序
+	Distinct(mapperKey func(interface{}) interface{}) Stream                           //去重
 	ToSlice() interface{}                                          //输出切片
-	CollectToMap(mapperKey func(T) U, collect func(T) U) map[U][]U //转换为map
-	Foreach(func(int, T))                                          //遍历
+	CollectToMap(mapperKey func(interface{})interface{}, collect func(interface{}) interface{}) map[interface{}][]interface{} //转换为map
+	Foreach(func(int, interface{}))                                          //遍历
 }
 
-func convertT(in []interface{}) []T {
-	ts := make([]T, 0)
+func convertT(in []interface{}) []interface{} {
+	ts := make([]interface{}, 0)
 	for _, i := range in {
-		ts = append(ts, T(i))
+		ts = append(ts, interface{}(i))
 	}
 	return ts
 }

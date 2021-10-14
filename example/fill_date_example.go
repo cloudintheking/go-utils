@@ -26,19 +26,24 @@ func (t *DateFillTest) SetFillDate(date *time.Time) {
 }
 
 func FillDateTest() {
-	data := make([]DateFillTest, 0)
+	data := make([]*DateFillTest, 0)
 	y2001 := time.Date(2001, time.January, 1, 0, 0, 0, 0, time.Local)
 	y2005 := y2001.AddDate(4, 0, 0)
 	y2010 := y2005.AddDate(5, 0, 0)
-	data = append(data, DateFillTest{
+	data = append(data, &DateFillTest{
 		CreateTime: &y2010,
 	})
-	data = append(data, DateFillTest{
+	data = append(data, &DateFillTest{
 		CreateTime: &y2001,
 	})
-	data = append(data, DateFillTest{
+	data = append(data, &DateFillTest{
 		CreateTime: &y2005,
 	})
 	iData, _ := slices.FillBlankDate(data, slices.YEAR)
-	fmt.Println(iData)
+
+	fd := iData.([]slices.DateFillInterface)
+	for _, d := range fd {
+		fmt.Printf("%v", d)
+		fmt.Println()
+	}
 }
