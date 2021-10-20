@@ -8,6 +8,7 @@
 package excel
 
 import (
+	"github.com/xuri/excelize/v2"
 	"strconv"
 )
 
@@ -42,4 +43,20 @@ func GetCellAxis(column, row int) string {
 		panic("column or row should grater than 0.")
 	}
 	return string(GetColumnName(column)) + strconv.Itoa(row)
+}
+
+/**
+ *  @Description:  批量合并单元格
+ *  @param excel excel操作对象
+ *  @param sheetName 表名
+ *  @param axisList 位置集合 [0][1]代表左上角位置  [2][3]代表右下角位置
+ *  @return error
+ */
+func BatchMergeCells(excel *excelize.File, sheetName string, axisList [][]int) error {
+	for _, axis := range axisList {
+		if err := excel.MergeCell(sheetName, GetCellAxis(axis[0], axis[1]), GetCellAxis(axis[2], axis[3])); err != nil {
+			return err
+		}
+	}
+	return nil
 }
