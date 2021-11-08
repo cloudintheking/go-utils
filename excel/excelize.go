@@ -35,7 +35,7 @@ func GetColumnName(column int) []byte {
 /**
  *  @Description: 获取单元格坐标轴
  *  @param column 列位置
- *  @param row 行位置
+ *  @param row 行位置 从1开始
  *  @return string
  */
 func GetCellAxis(column, row int) string {
